@@ -4,6 +4,7 @@ import { CATEGORIES, type Category } from '../domain/types';
 import { listAuctions } from '../server/api';
 import { AuctionCard, Loading, Notice } from '../ui/components';
 import { useCurrentUser, useFocusHeading, useLive, useNow } from '../ui/hooks';
+import { FeatureStrip, HeroCarousel, ItemsRow } from '../ui/Hero';
 
 type Filter = 'disponibles' | 'en-curso' | 'esperando' | 'terminadas';
 
@@ -17,6 +18,11 @@ export function Explore() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<Category | ''>('');
   const [filter, setFilter] = useState<Filter>('disponibles');
+
+  const endingSoon = (data ?? [])
+    .filter((s) => statusOf(s.auction, now) === 'en-curso')
+    .sort((a, b) => a.auction.endsAt! - b.auction.endsAt!)
+    .slice(0, 10);
 
   const items = (data ?? [])
     .map((s) => ({ s, status: statusOf(s.auction, now) }))
@@ -40,9 +46,19 @@ export function Explore() {
 
   return (
     <>
-      <h1 ref={h1} tabIndex={-1}>
-        Artículos en subasta
+      <h1 ref={h1} tabIndex={-1} className="sr-only">
+        Subasta Amiga: artículos en subasta
       </h1>
+      {data && <HeroCarousel items={data} now={now} />}
+      <FeatureStrip />
+      {endingSoon.length > 0 && (
+        <ItemsRow title="⏱ Terminan pronto">
+          {endingSoon.map((s) => (
+            <AuctionCard key={s.auction.id} summary={s} now={now} meId={user?.id} />
+          ))}
+        </ItemsRow>
+      )}
+      <h2 id="articulos" className="section-title">Todos los artículos</h2>
       <p className="lead">
         Elija un artículo para ver sus fotos y ofertar. Gana quien haga la oferta más alta cuando termine el tiempo.
       </p>
@@ -50,7 +66,7 @@ export function Explore() {
       <form className="filters" role="search" onSubmit={(e) => e.preventDefault()}>
         <div className="field">
           <label htmlFor="buscar">Buscar</label>
-          <input id="buscar" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Por ejemplo: silla" />
+          <input id="buscar" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Por ejemplo: hervidor" />
         </div>
         <div className="field">
           <label htmlFor="categoria">Categoría</label>

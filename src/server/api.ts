@@ -16,7 +16,7 @@ import { formatCLP } from '../domain/money';
 import type { AppNotification, Auction, Category, Condition, Id, NotificationKind, User } from '../domain/types';
 import { createSeed, type DB } from './seed';
 
-const DB_KEY = 'subastas-db-v1';
+const DB_KEY = 'subastas-db-v3';
 const SESSION_KEY = 'subastas-sesion';
 const OFFLINE_KEY = 'subastas-sin-conexion';
 

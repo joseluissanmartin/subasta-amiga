@@ -7,6 +7,7 @@ import { ItemPage } from './pages/ItemPage';
 import { Login } from './pages/Login';
 import { Publish } from './pages/Publish';
 import { demoUsers, listNotifications, resetDemoData, runSettlement, setOffline, switchUser, isOffline } from './server/api';
+import { LogoMark } from './ui/Mascot';
 import { syncClock, useCurrentUser, useLive, useOnline, useRoute, useTextSize, type TextSize } from './ui/hooks';
 
 function parseRoute(route: string) {
@@ -51,7 +52,7 @@ export default function App() {
         {page}
       </main>
       <footer className="footer">
-        <p>Subasta Amiga · Prototipo · Las ofertas son en pesos chilenos (CLP). Esta página no realiza cobros.</p>
+        <p><strong>Subasta Amiga</strong> · Publica, oferta, gana · Prototipo · Las ofertas son en pesos chilenos (CLP). Esta página no realiza cobros.</p>
         {DEMO && <DemoTools />}
       </footer>
     </>
@@ -74,8 +75,14 @@ function Header({ path }: { path: string }) {
   return (
     <header className="header">
       <div className="header-top">
-        <a href="#/" className="brand">
-          <span aria-hidden="true">🔨</span> Subasta Amiga
+        <a href="#/" className="brand" aria-label="Subasta Amiga, ir al inicio">
+          <LogoMark size={56} />
+          <span className="brand-text">
+            <span className="brand-name">
+              SUBASTA<span className="accent">AMIGA</span>
+            </span>
+            <span className="brand-tagline">PUBLICA · OFERTA · GANA</span>
+          </span>
         </a>
         <div className="header-tools">
           <TextSizeControl size={size} setSize={setSize} />

@@ -10,6 +10,8 @@ export interface User {
 }
 
 export const CATEGORIES = {
+  electrohogar: 'Electrohogar',
+  tecnologia: 'Tecnología',
   muebles: 'Muebles',
   libros: 'Libros y revistas',
   decoracion: 'Decoración',

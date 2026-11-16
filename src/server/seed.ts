@@ -1,5 +1,7 @@
 import { TERMS_VERSION } from '../config';
-import type { AppNotification, Auction, Bid, Category, Report, User } from '../domain/types';
+import { incrementFor } from '../domain/money';
+import type { AppNotification, Auction, Bid, Category, Condition, Report, User } from '../domain/types';
+import { CATALOG } from './catalog';
 
 export interface DB {
   users: User[];
@@ -11,26 +13,27 @@ export interface DB {
   processed: Record<string, unknown>;
 }
 
-const PALETTE: Record<Category, [string, string]> = {
-  muebles: ['#f6e3c5', '#c98a4b'],
-  libros: ['#dfe9f5', '#4b78b0'],
-  decoracion: ['#f5dfe8', '#b0577e'],
-  cocina: ['#e3f1e0', '#4d8a45'],
-  herramientas: ['#ece7dc', '#7a6a4f'],
-  ropa: ['#efe2f5', '#7d55a3'],
-  otros: ['#e8e8e8', '#666666'],
-};
-
-/** Ilustración simple para artículos sin foto (los de ejemplo). */
-export function placeholderImage(category: Category, emoji: string): string {
-  const [bg, fg] = PALETTE[category];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="${bg}"/><circle cx="200" cy="150" r="105" fill="${fg}" opacity="0.15"/><text x="200" y="190" font-size="120" text-anchor="middle">${emoji}</text></svg>`;
+/** Ilustración para artículos sin foto: fondo blanco (como una foto de producto) y un dibujo grande. */
+export function placeholderImage(_category: Category, emoji: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#ffffff"/><circle cx="200" cy="150" r="110" fill="#ff6f00" opacity="0.10"/><circle cx="200" cy="150" r="80" fill="#ff6f00" opacity="0.10"/><text x="200" y="192" font-size="120" text-anchor="middle">${emoji}</text></svg>`;
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
 export const CATEGORY_EMOJI: Record<Category, string> = {
-  muebles: '🪑', libros: '📚', decoracion: '🖼️', cocina: '🫖', herramientas: '🔨', ropa: '🧶', otros: '📦',
+  electrohogar: '🔌', tecnologia: '📱', muebles: '🪑', libros: '📚', decoracion: '🖼️', cocina: '🫖', herramientas: '🔨', ropa: '🧶', otros: '📦',
 };
+
+const COMUNAS = ['Ñuñoa', 'Providencia', 'La Florida', 'Maipú', 'Puente Alto', 'Las Condes', 'San Miguel', 'Viña del Mar', 'Concepción', 'Temuco'];
+const REGION_OF: Record<string, string> = { 'Viña del Mar': 'Valparaíso', Concepción: 'Biobío', Temuco: 'La Araucanía' };
+const CONDITIONS: Condition[] = ['como-nuevo', 'buen-estado', 'buen-estado', 'con-detalles', 'nuevo'];
+const DEFECTS: Record<Condition, string> = {
+  nuevo: 'Ninguno. Está en su caja, sin abrir.',
+  'como-nuevo': 'Ninguno. Se usó muy pocas veces.',
+  'buen-estado': 'Pequeñas marcas de uso normales.',
+  'con-detalles': 'Tiene rayones visibles, pero funciona bien.',
+};
+
+const roundTo = (n: number, step: number) => Math.max(step, Math.round(n / step) * step);
 
 export function createSeed(now: number): DB {
   const MIN = 60_000;
@@ -39,79 +42,66 @@ export function createSeed(now: number): DB {
     { id: 'u-jorge', alias: 'Jorge', email: 'jorge@ejemplo.cl', whatsapp: '+56 9 2222 2222', createdAt: now - 40 * 86_400_000, termsVersion: TERMS_VERSION },
     { id: 'u-carmen', alias: 'Carmen', email: 'carmen@ejemplo.cl', createdAt: now - 10 * 86_400_000, termsVersion: TERMS_VERSION },
   ];
+  const ids = users.map((u) => u.id);
 
-  let n = 0;
+  const auctions: Auction[] = [];
   const bids: Bid[] = [];
-  const mk = (
-    p: Omit<Auction, 'id' | 'createdAt' | 'bidCount' | 'extensions' | 'photos' | 'region'> & {
-      emoji: string; createdAgo: number; history?: [string, number, number][];
-    },
-  ): Auction => {
-    const id = 'a-' + ++n;
-    const { emoji, createdAgo, history = [], ...rest } = p;
-    for (const [who, amount, agoMs] of history) {
-      bids.push({ id: `b-${id}-${bids.length}`, auctionId: id, bidderId: who, amount, at: now - agoMs, requestId: `seed-${id}-${bids.length}`, extended: false });
-    }
-    const last = history[history.length - 1];
-    return {
-      ...rest,
-      id,
-      region: 'Región Metropolitana',
-      createdAt: now - createdAgo,
-      photos: [placeholderImage(rest.category, emoji)],
-      bidCount: history.length,
-      extensions: 0,
-      currentPrice: last?.[1],
-      leaderId: last?.[0],
-    };
-  };
 
-  const auctions: Auction[] = [
-    mk({
-      sellerId: 'u-jorge', title: 'Silla de mimbre antigua', category: 'muebles', emoji: '🪑',
-      description: 'Silla de mimbre de los años 70, muy cómoda. Ideal para terraza o dormitorio.',
-      condition: 'buen-estado', defects: 'Un pequeño roce en la pata trasera izquierda.', comuna: 'Ñuñoa',
-      minPrice: 15_000, durationMs: 15 * MIN, createdAgo: 30 * MIN,
-      startedAt: now - 6 * MIN, endsAt: now + 9 * MIN,
-      history: [['u-carmen', 15_000, 6 * MIN], ['u-rosa', 16_000, 4 * MIN]],
-    }),
-    mk({
-      sellerId: 'u-rosa', title: 'Juego de té de loza (6 tazas)', category: 'cocina', emoji: '🫖',
-      description: 'Juego de té completo: tetera, azucarero, lechero y 6 tazas con platillo. Loza blanca con flores azules.',
-      condition: 'como-nuevo', defects: 'Ninguno conocido.', comuna: 'Providencia',
-      minPrice: 20_000, durationMs: 5 * MIN, createdAgo: 20 * MIN,
-      startedAt: now - 3 * MIN, endsAt: now + 2 * MIN,
-      history: [['u-jorge', 20_000, 3 * MIN], ['u-carmen', 21_000, 2 * MIN]],
-    }),
-    mk({
-      sellerId: 'u-carmen', title: 'Colección de novelas de Isabel Allende', category: 'libros', emoji: '📚',
-      description: 'Ocho novelas en tapa blanda. Se entregan juntas.',
-      condition: 'buen-estado', defects: 'Algunas hojas amarillas por el tiempo.', comuna: 'La Florida',
-      minPrice: 8_000, durationMs: 5 * MIN, createdAgo: 10 * MIN,
-    }),
-    mk({
-      sellerId: 'u-jorge', title: 'Caja de herramientas con 40 piezas', category: 'herramientas', emoji: '🔨',
-      description: 'Caja metálica con destornilladores, llaves, alicate y martillo.',
-      condition: 'buen-estado', defects: 'Le falta una llave de 10 mm.', comuna: 'Maipú',
-      minPrice: 25_000, durationMs: 15 * MIN, createdAgo: 5 * MIN,
-    }),
-    mk({
-      sellerId: 'u-rosa', title: 'Chaleco de lana tejido a mano', category: 'ropa', emoji: '🧶',
-      description: 'Chaleco talla M, lana de oveja color crema. Tejido por mí.',
-      condition: 'nuevo', defects: 'Ninguno.', comuna: 'Providencia',
-      minPrice: 12_000, durationMs: 15 * MIN, createdAgo: 40 * MIN,
-      startedAt: now - 12 * MIN, endsAt: now + 3 * MIN,
-      history: [['u-jorge', 12_000, 12 * MIN]],
-    }),
-    mk({
-      sellerId: 'u-carmen', title: 'Reloj de pared de madera', category: 'decoracion', emoji: '🕰️',
-      description: 'Reloj a pilas con caja de madera. Funciona perfecto.',
-      condition: 'buen-estado', defects: 'El vidrio tiene un rayón pequeño.', comuna: 'La Florida',
-      minPrice: 18_000, durationMs: 5 * MIN, createdAgo: 50 * MIN,
-      startedAt: now - 20 * MIN, endsAt: now - 15 * MIN,
-      history: [['u-rosa', 18_000, 20 * MIN], ['u-jorge', 19_000, 18 * MIN], ['u-rosa', 20_000, 16 * MIN]],
-    }),
-  ];
+  CATALOG.forEach((item, i) => {
+    const id = `a-${i + 1}`;
+    const sellerId = ids[i % 3];
+    const others = ids.filter((u) => u !== sellerId);
+    const condition = CONDITIONS[i % CONDITIONS.length];
+    const comuna = COMUNAS[i % COMUNAS.length];
+    // Usado: precio mínimo cerca del 40% del valor nuevo.
+    const minPrice = roundTo(item.ref * 0.4, item.ref < 100_000 ? 1_000 : 5_000);
+    const durationMs = [5, 15, 15, 5][i % 4] * MIN;
+
+    // Reparto de estados: 4 terminadas, 8 esperando oferta, el resto en curso.
+    const kind = i % 10 === 9 || i === 4 ? 'terminada' : i % 4 === 3 ? 'esperando' : 'en-curso';
+    const a: Auction = {
+      id,
+      sellerId,
+      title: item.name,
+      description:
+        `${item.kind.replace(/s$/, '')}: ${item.name}.\n` +
+        `Funciona correctamente. Se vende porque ya no lo uso.\n\n` +
+        `Precio de referencia nuevo (SoloTodo.cl): $${item.ref.toLocaleString('es-CL')} CLP.`,
+      condition,
+      defects: DEFECTS[condition],
+      category: item.category,
+      region: REGION_OF[comuna] ?? 'Región Metropolitana',
+      comuna,
+      photos: [item.image],
+      minPrice,
+      durationMs,
+      createdAt: now - (20 + i) * MIN,
+      bidCount: 0,
+      extensions: 0,
+    };
+
+    if (kind !== 'esperando') {
+      const nBids = 1 + (i % 4);
+      const endsAt = kind === 'terminada' ? now - (2 + i) * MIN : now + (1.5 + ((i * 7) % 13)) * MIN;
+      const startedAt = endsAt - durationMs;
+      let price = minPrice;
+      for (let b = 0; b < nBids; b++) {
+        const bidder = others[b % 2];
+        bids.push({
+          id: `b-${id}-${b}`, auctionId: id, bidderId: bidder, amount: price,
+          at: Math.min(now - 1000, startedAt + ((b + 1) * (Math.min(endsAt, now) - startedAt)) / (nBids + 1)),
+          requestId: `seed-${id}-${b}`, extended: false,
+        });
+        a.leaderId = bidder;
+        a.currentPrice = price;
+        price += incrementFor(price) * (1 + (b % 2));
+      }
+      a.bidCount = nBids;
+      a.startedAt = startedAt;
+      a.endsAt = endsAt;
+    }
+    auctions.push(a);
+  });
 
   return { users, auctions, bids, notifications: [], reports: [], processed: {} };
 }
