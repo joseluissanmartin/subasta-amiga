@@ -40,4 +40,6 @@ export const HIGH_BID_FACTOR = 3;
 export const MAX_PHOTOS = 4;
 export const TERMS_VERSION = '2026-11-prototipo';
 
-export const SUPPORT_WHATSAPP = '+56 9 0000 0000';
+export const SUPPORT_WHATSAPP = '+56 9 9879 2372';
+/** Número para el enlace wa.me (solo dígitos, con código de país). */
+export const SUPPORT_WHATSAPP_LINK = 'https://wa.me/56998792372?text=' + encodeURIComponent('Hola, tengo una consulta sobre Subasta Amiga.');

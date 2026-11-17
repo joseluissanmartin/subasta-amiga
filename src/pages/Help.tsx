@@ -1,4 +1,4 @@
-import { EXTENSION_MS, EXTENSION_WINDOW_MS, SUPPORT_WHATSAPP } from '../config';
+import { EXTENSION_MS, EXTENSION_WINDOW_MS, SUPPORT_WHATSAPP, SUPPORT_WHATSAPP_LINK } from '../config';
 import { formatDuration } from '../ui/format';
 import { useFocusHeading } from '../ui/hooks';
 
@@ -24,7 +24,7 @@ export function Help() {
         <p>
           <strong>¿Necesita ayuda de una persona?</strong>
         </p>
-        <p>Escríbanos por WhatsApp al {SUPPORT_WHATSAPP}, de lunes a viernes de 9:00 a 18:00.</p>
+        <p>Escríbanos por WhatsApp al <a href={SUPPORT_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">{SUPPORT_WHATSAPP}</a>, de lunes a viernes de 9:00 a 18:00.</p>
       </div>
       <h2>Preguntas frecuentes</h2>
       {FAQ.map(([q, a]) => (

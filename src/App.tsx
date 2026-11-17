@@ -8,6 +8,7 @@ import { Login } from './pages/Login';
 import { Publish } from './pages/Publish';
 import { demoUsers, listNotifications, resetDemoData, runSettlement, setOffline, switchUser, isOffline } from './server/api';
 import { LogoMark } from './ui/Mascot';
+import { ErrorBoundary, ThemeToggle, WhatsAppButton } from './ui/Extras';
 import { syncClock, useCurrentUser, useLive, useOnline, useRoute, useTextSize, type TextSize } from './ui/hooks';
 
 function parseRoute(route: string) {
@@ -49,12 +50,13 @@ export default function App() {
         </div>
       )}
       <main id="contenido" tabIndex={-1}>
-        {page}
+        <ErrorBoundary key={route}>{page}</ErrorBoundary>
       </main>
       <footer className="footer">
         <p><strong>Subasta Amiga</strong> · Publica, oferta, gana · Prototipo · Las ofertas son en pesos chilenos (CLP). Esta página no realiza cobros.</p>
         {DEMO && <DemoTools />}
       </footer>
+      <WhatsAppButton />
     </>
   );
 }
@@ -85,6 +87,7 @@ function Header({ path }: { path: string }) {
           </span>
         </a>
         <div className="header-tools">
+          <ThemeToggle />
           <TextSizeControl size={size} setSize={setSize} />
           {user ? (
             <span className="who">

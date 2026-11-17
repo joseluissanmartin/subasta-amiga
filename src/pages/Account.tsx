@@ -122,7 +122,7 @@ function AccountTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           </ul>
         ))}
 
-      <button className="btn btn-secondary logout" onClick={() => { logout(); navigate('/'); }}>
+      <button className="btn btn-secondary logout" onClick={() => { navigate('/'); logout(); }}>
         Salir de mi cuenta
       </button>
     </>

@@ -3,7 +3,7 @@ import { statusOf } from '../domain/auction';
 import { formatCLP } from '../domain/money';
 import type { AuctionSummary } from '../server/api';
 import { formatRemaining } from './format';
-import { Mascot } from './Mascot';
+import { AnimatedMascot } from './Mascot';
 
 const AUTOPLAY_MS = 7000;
 
@@ -45,7 +45,7 @@ export function HeroCarousel({ items, now }: { items: AuctionSummary[]; now: num
               </a>
             </div>
           </div>
-          <Mascot size={260} className="slide-mascot" />
+          <AnimatedMascot size={260} className="slide-mascot" />
         </div>
       ),
     },
@@ -92,7 +92,7 @@ export function HeroCarousel({ items, now }: { items: AuctionSummary[]; now: num
               </a>
             </div>
           </div>
-          <Mascot size={240} pose="saludo" wink className="slide-mascot" />
+          <AnimatedMascot size={240} className="slide-mascot" />
         </div>
       ),
     },
