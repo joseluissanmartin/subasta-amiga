@@ -501,3 +501,38 @@ fieldset.choices .choice { margin-bottom: 0; }
   .michi *, .michi-bubble, .michi-prop, .logo-mark * { animation: none !important; }
   .michi-particles { display: none; }
 }
+
+/* ---------- aviso de nueva oferta y fiesta ---------- */
+.bid-toast-area { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 60; width: min(520px, calc(100% - 32px)); pointer-events: none; }
+.bid-toast {
+  pointer-events: auto; display: flex; align-items: center; gap: 0.8rem;
+  background: var(--surface); color: var(--text); border: 3px solid var(--orange); border-radius: var(--radius);
+  box-shadow: 0 10px 30px var(--shadow); padding: 0.8rem 0.9rem 0.8rem 1rem;
+  animation: bid-toast-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both, bid-toast-glow 1.6s ease-in-out 0.45s 2;
+}
+.bid-toast.is-mine { border-color: #2fbf71; }
+.bid-toast-icon { font-size: 2rem; line-height: 1; animation: bid-toast-hammer 0.5s ease-in-out 0.4s 3; transform-origin: 70% 70%; }
+.bid-toast-text { display: flex; flex-direction: column; flex: 1; font-size: 1.1rem; line-height: 1.35; }
+.bid-toast-kicker { color: var(--accent-text); font-weight: 800; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.04em; }
+.bid-toast.is-mine .bid-toast-kicker { color: inherit; }
+.bid-toast-amount { color: var(--accent-text); font-size: 1.25rem; }
+.bid-toast-close { min-width: 44px; min-height: 44px; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text); font-size: 1.1rem; cursor: pointer; }
+.bid-toast-close:hover { background: var(--border); }
+@keyframes bid-toast-in { from { opacity: 0; transform: translateY(-30px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes bid-toast-glow { 50% { box-shadow: 0 0 0 6px rgba(255, 111, 0, 0.35), 0 10px 30px var(--shadow); } }
+@keyframes bid-toast-hammer { 50% { transform: rotate(-35deg); } }
+
+.bid-party { position: fixed; inset: 0; z-index: 55; pointer-events: none; overflow: hidden; }
+.bid-party span {
+  position: absolute; top: -3rem; left: var(--x); font-size: calc(1.4rem + (var(--k) * 7 % 5) * 0.3rem);
+  animation: bid-confetti 2.6s cubic-bezier(0.3, 0.6, 0.6, 1) calc(var(--k) * 0.06s) both;
+}
+@keyframes bid-confetti {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(105vh) rotate(calc(var(--k) * 47deg + 180deg)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bid-party { display: none; }
+  .bid-toast, .bid-toast-icon { animation: none !important; }
+}

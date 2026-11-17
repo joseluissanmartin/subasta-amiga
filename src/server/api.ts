@@ -384,6 +384,27 @@ export async function markNotificationsRead(): Promise<void> {
   });
 }
 
+// ---------- renovación de artículos de ejemplo (solo prototipo) ----------
+
+/**
+ * Si ya no queda ningún artículo de ejemplo abierto (todos terminaron o
+ * vencieron), los reemplaza por una tanda nueva. Se conservan las cuentas,
+ * los artículos publicados por personas y los avisos.
+ */
+function refreshDemoItems(db: DB, now: number): boolean {
+  // Las bases antiguas no marcaban los ejemplos: se reconocen por su id a-1…a-30.
+  const isDemo = (a: Auction) => a.demo ?? /^a-\d{1,2}$/.test(a.id);
+  const demos = db.auctions.filter(isDemo);
+  if (demos.some((a) => { const s = statusOf(a, now); return s === 'en-curso' || s === 'esperando'; })) return false;
+  const oldIds = new Set(demos.map((a) => a.id));
+  const fresh = createSeed(now);
+  db.auctions = [...db.auctions.filter((a) => !oldIds.has(a.id)), ...fresh.auctions];
+  db.bids = [...db.bids.filter((b) => !oldIds.has(b.auctionId)), ...fresh.bids];
+  db.notifications = db.notifications.filter((n) => !oldIds.has(n.auctionId));
+  db.reports = db.reports.filter((r) => !oldIds.has(r.auctionId));
+  return true;
+}
+
 // ---------- tarea de cierre (en Supabase: pg_cron cada minuto) ----------
 
 /**
@@ -395,7 +416,7 @@ export async function runSettlement(): Promise<void> {
   const run = () => {
     const db = load();
     const now = serverNow();
-    let changed = false;
+    let changed = refreshDemoItems(db, now);
     for (const a of db.auctions) {
       if (a.settledAt) continue;
       const s = statusOf(a, now);

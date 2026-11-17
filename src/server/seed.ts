@@ -78,6 +78,7 @@ export function createSeed(now: number): DB {
       createdAt: now - (20 + i) * MIN,
       bidCount: 0,
       extensions: 0,
+      demo: true,
     };
 
     if (kind !== 'esperando') {

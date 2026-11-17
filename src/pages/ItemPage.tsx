@@ -12,6 +12,7 @@ import {
   type AuctionDetail,
 } from '../server/api';
 import { BidPanel } from '../ui/BidPanel';
+import { BidToast } from '../ui/BidToast';
 import { Loading, Notice, PriceInfo, StatusBadge, TimeInfo } from '../ui/components';
 import { formatDate, formatDuration, formatMoment } from '../ui/format';
 import { navigate, useCurrentUser, useFocusHeading, useLive, useNow } from '../ui/hooks';
@@ -45,6 +46,7 @@ function Item({ detail, user, now }: { detail: AuctionDetail; user: User | null;
 
   return (
     <article className="item">
+      <BidToast bids={detail.bids} />
       <a href="#/" className="back-link">
         ← Volver a los artículos
       </a>

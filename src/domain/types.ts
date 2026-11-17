@@ -56,6 +56,8 @@ export interface Auction {
   withdrawnAt?: number;
   /** Cuando la tarea de cierre registró el resultado y envió avisos. */
   settledAt?: number;
+  /** Artículo de ejemplo del prototipo (se renueva solo cuando se acaban todos). */
+  demo?: boolean;
   delivery?: { seller?: boolean; buyer?: boolean };
 }
 
